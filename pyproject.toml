@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citeseer"
+version = "0.2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx",
+    "mcp",
+    "pydantic-settings>=2.0",
+    "apscheduler>=3.10",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require running ES (deselect with '-m not integration')",
+]

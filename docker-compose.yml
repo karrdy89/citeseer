@@ -1,0 +1,50 @@
+services:
+  es:
+    image: elasticsearch:8.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+    ports:
+      - "9200:9200"
+    volumes:
+      - D:\docker-volume\citeseer\es:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  specter:
+    build: ./specter
+    container_name: specter2
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: citeseer-app
+    env_file: .env
+    environment:
+      - ES_HOST=http://es:9200
+      - SPECTER_URL=http://specter:8000
+    volumes:
+      - D:\docker-volume\citeseer\papers:/app/data
+    depends_on:
+      es:
+        condition: service_healthy
+      specter:
+        condition: service_healthy
